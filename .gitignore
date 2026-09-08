@@ -1,0 +1,22 @@
+# Ansible
+
+*.retry
+*.log
+
+# Vault - never commit vault password files
+.vault_pass.txt
+vault_pass.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+
+# Ansible galaxy downloaded collections/roles (reinstall with `ansible-galaxy collection install -r requirements.yml` or `ansible-galaxy role install -r requirements.yml`)
+collections/
+roles/downloaded/
+
+# OS Junk
+.DS_Store
