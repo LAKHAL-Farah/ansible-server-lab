@@ -1,0 +1,6 @@
+---
+- name: Apply baseline configuration to every node
+  hosts: all
+  become: true
+  roles:
+    - common

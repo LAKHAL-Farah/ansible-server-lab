@@ -1,0 +1,39 @@
+---
+- name: Update apt package cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install baseline packages
+  ansible.builtin.apt:
+    name: "{{ common_baseline_packages }}"
+    state: present
+
+# --- Service management without an init system ---
+# These containers don't run systemd as PID 1, so ansible.builtin.service
+# can't manage cron the normal way. This manages it manually and
+# idempotently instead: check first, only act if it isn't already running.
+- name: Check whether cron is already running
+  ansible.builtin.command: pgrep cron
+  register: common_cron_check
+  changed_when: false
+  failed_when: false
+
+- name: Start cron if it isn't already running
+  ansible.builtin.command: cron
+  when: common_cron_check.rc !=0
+  changed_when: true
+
+- name: Ensure the managed user exists
+  ansible.builtin.user:
+    name: "{{ common_managed_user }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+- name: Deploy the "last configured by Ansible" marker file
+  ansible.builtin.template:
+    src: last_configured.txt.j2
+    dest: /etc/last_configured_by_ansible.txt
+    owner: root
+    group: root
+    mode: "0644"

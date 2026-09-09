@@ -1,0 +1,6 @@
+---
+common_baseline_packages:
+  - cron
+  - curl
+  - vim
+common_managed_user: deploy
