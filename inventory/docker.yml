@@ -1,0 +1,15 @@
+plugin: community.docker.docker_containers
+
+docker_host: unix:///var/run/docker.sock
+
+connection_type: docker-api
+
+keyed_groups:
+  - key: docker_labels['lab.role']
+    prefix: role
+    separator: "_"
+
+filters:
+  - include: >-
+      docker_config.Labels.get('lab.env') == 'dev'
+  - exclude: true

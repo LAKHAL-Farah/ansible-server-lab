@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  lb01:
+    build: 
+      context: ./docker
+    container_name: lb01
+    hostname: lb01  
+    labels:
+      - "lab.role=lb"
+      - "lab.env=dev"
+    tty: true
+    networks:
+      - lab_net
+  
+
+  web01:
+    build: 
+      context: ./docker
+    container_name: web01
+    hostname: web01
+    labels:
+      - "lab.role=web"
+      - "lab.env=dev"
+    tty: true
+    networks:
+      - lab_net
+  web02:
+      build: 
+        context: ./docker
+      container_name: web02
+      hostname: web02
+      labels:
+        - "lab.role=web"
+        - "lab.env=dev"
+      tty: true
+      networks:
+        - lab_net    
+  db01:
+    build: 
+      context: ./docker
+    container_name: db01
+    hostname: db01
+    labels:
+      - "lab.role=db"
+      - "lab.env=dev"
+    tty: true
+    networks:
+      - lab_net
+
+networks:
+  lab_net:
+    driver: bridge
+
+  
