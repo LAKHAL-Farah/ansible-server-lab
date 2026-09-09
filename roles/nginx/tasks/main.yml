@@ -1,0 +1,45 @@
+---
+- name: Install nginx package
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Check whether nginx is already running
+  ansible.builtin.command: pgrep nginx
+  register: nginx_check
+  changed_when: false
+  failed_when: false
+
+- name: Remove the default nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Deploy the app index page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    owner: www-data
+    group: www-data
+    mode: "0644"
+
+- name: Deploy nginx site configuration
+  ansible.builtin.template:
+    src: site.conf.j2
+    dest: /etc/nginx/sites-available/app.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable the app site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/app.conf
+    dest: /etc/nginx/sites-enabled/app.conf
+    state: link
+  notify: Reload nginx
+
+- name: Start nginx if it isn't already running
+  ansible.builtin.command: nginx
+  when: nginx_check.rc != 0
+  changed_when: true

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head><title>{{ inventory_hostname }}</title></head>
+<body>
+  <h1>Hello from {{ inventory_hostname }}</h1>
+  <p>Role: {{ docker_labels['lab.role'] | default('unknown') }}</p>
+  <p>Port: {{ nginx_port }}</p>
+  <p>Configured at: {{ ansible_date_time.iso8601 }}</p>
+</body>
+</html>

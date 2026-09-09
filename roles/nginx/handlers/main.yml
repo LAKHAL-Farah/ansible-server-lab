@@ -1,0 +1,5 @@
+---
+- name: Reload nginx
+  ansible.builtin.command: nginx -s reload
+  when: nginx_check.rc == 0
+  changed_when: true

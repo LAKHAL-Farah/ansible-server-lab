@@ -1,0 +1,12 @@
+---
+- name: Apply baseline configuration to every node
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Configure the web tier
+  hosts: role_web
+  become: true
+  roles:
+    - nginx

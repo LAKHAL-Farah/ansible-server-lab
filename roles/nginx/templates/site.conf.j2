@@ -1,0 +1,11 @@
+server {
+    listen {{ nginx_port }};
+    server_name {{ inventory_hostname }};
+
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }        
+}
