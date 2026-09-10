@@ -1,0 +1,17 @@
+global
+    daemon
+
+defaults
+    mode    http
+    timeout connect 5s
+    timeout client  30s
+    timeout server  30s
+
+frontend web_frontend
+    bind *:{{ haproxy_bind_port }}
+    default_backend web_backend
+
+backend web_backend
+{% for host in groups['role_web'] %}
+    server {{ host }} {{ host }}:{{ hostvars[host].nginx_port | default(8080) }} check
+{% endfor %}

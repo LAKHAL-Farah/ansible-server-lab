@@ -10,3 +10,9 @@
   become: true
   roles:
     - nginx
+
+- name: Configure the load balancer
+  hosts: role_lb
+  become: true
+  roles:
+    - haproxy

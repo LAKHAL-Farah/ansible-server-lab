@@ -1,0 +1,25 @@
+---
+- name: Install haproxy package
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+
+- name: Check whether haproxy is already running
+  ansible.builtin.command: pgrep haproxy
+  register: haproxy_check
+  changed_when: false
+  failed_when: false
+
+- name: Deploy haproxy configuration from live web-tier inventory
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload haproxy
+
+- name: Start haproxy if it isn't already running
+  ansible.builtin.command: "haproxy -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid"
+  when: haproxy_check.rc != 0
+  changed_when: true

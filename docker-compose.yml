@@ -36,6 +36,19 @@ services:
       tty: true
       networks:
         - lab_net    
+  web03:
+    build:
+      context: ./docker
+    container_name: web03
+    hostname: web03
+    labels:
+      - "lab.role=web"
+      - "lab.env=dev"
+    tty: true
+    networks:
+      - lab_net
+
+
   db01:
     build: 
       context: ./docker

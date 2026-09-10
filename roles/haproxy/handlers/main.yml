@@ -1,0 +1,5 @@
+---
+- name: Reload haproxy
+  ansible.builtin.shell: pkill haproxy && haproxy -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid
+  when: haproxy_check.rc == 0
+  changed_when: true
