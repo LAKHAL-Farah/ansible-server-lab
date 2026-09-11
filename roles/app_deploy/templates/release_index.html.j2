@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+<head><title>{{ inventory_hostname }} - {{ app_version }}</title></head>
+<body>
+  <h1>App version {{ app_version }}</h1>
+  <p>Served from {{ inventory_hostname }}</p>
+  <p>Deployed at {{ ansible_date_time.iso8601 }}</p>
+</body>
+</html>

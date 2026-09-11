@@ -1,0 +1,4 @@
+---
+app_deploy_release_dir: /opt/app/releases
+app_deploy_current_link: /opt/app/current
+app_deploy_web_root: /var/www/html

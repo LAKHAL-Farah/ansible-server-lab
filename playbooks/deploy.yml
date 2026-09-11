@@ -1,0 +1,23 @@
+---
+- name: Rolling deploy of the app release
+  hosts: role_web
+  become: true
+  serial: 1
+  max_fail_percentage: 0   # one bad host aborts the rollout — don't ship a broken version fleet-wide
+
+  pre_tasks:
+    - name: Ensure a release version was provided
+      ansible.builtin.assert:
+        that: app_version is defined
+        fail_msg: "Pass -e app_version=X.Y.Z when running this playbook"
+
+    - name: Drain this host from the load balancer before deploying
+      community.general.haproxy:
+        state: disabled
+        host: "{{ inventory_hostname }}"
+        socket: /run/haproxy.sock
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['role_lb'] }}"
+
+  roles:
+    - app_deploy

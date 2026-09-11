@@ -1,5 +1,6 @@
 global
     daemon
+    stats socket /run/haproxy.sock mode 660 level admin
 
 defaults
     mode    http
@@ -15,3 +16,5 @@ backend web_backend
 {% for host in groups['role_web'] %}
     server {{ host }} {{ host }}:{{ hostvars[host].nginx_port | default(8080) }} check
 {% endfor %}
+
+

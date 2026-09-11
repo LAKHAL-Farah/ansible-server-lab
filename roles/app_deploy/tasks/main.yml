@@ -1,0 +1,77 @@
+---
+- name: Capture the currently-live release, for rollback if this deploy fails
+  ansible.builtin.command: "readlink -f {{ app_deploy_current_link }}"
+  register: app_previous_release
+  changed_when: false
+  failed_when: false   # non-zero here just means "no release deployed yet" — that's fine
+
+- name: Deploy and verify the new release
+  block:
+    - name: Create the release directory
+      ansible.builtin.file:
+        path: "{{ app_deploy_release_dir }}/{{ app_version }}"
+        state: directory
+        mode: "0755"
+
+    - name: Render release content
+      ansible.builtin.template:
+        src: release_index.html.j2
+        dest: "{{ app_deploy_release_dir }}/{{ app_version }}/index.html"
+        mode: "0644"
+
+    - name: Point 'current' at the new release
+      ansible.builtin.file:
+        src: "{{ app_deploy_release_dir }}/{{ app_version }}"
+        dest: "{{ app_deploy_current_link }}"
+        state: link
+        force: true
+
+    - name: Publish the current release to the web root
+      ansible.builtin.copy:
+        src: "{{ app_deploy_current_link }}/index.html"
+        dest: "{{ app_deploy_web_root }}/index.html"
+        remote_src: true
+        mode: "0644"
+
+    - name: Health-check the deployed release
+      ansible.builtin.uri:
+        url: "http://localhost:{{ nginx_port }}/"
+        status_code: 200
+        return_content: true
+      register: app_health
+      until: app_version in app_health.content
+      retries: 5
+      delay: 2
+
+  rescue:
+    - name: Roll back 'current' to the previous release
+      ansible.builtin.file:
+        src: "{{ app_previous_release.stdout }}"
+        dest: "{{ app_deploy_current_link }}"
+        state: link
+        force: true
+      when: app_previous_release.rc == 0
+
+    - name: Re-publish the previous release's content to the web root
+      ansible.builtin.copy:
+        src: "{{ app_deploy_current_link }}/index.html"
+        dest: "{{ app_deploy_web_root }}/index.html"
+        remote_src: true
+        mode: "0644"
+      when: app_previous_release.rc == 0
+
+    - name: Fail loudly now that rollback is complete
+      ansible.builtin.fail:
+        msg: >-
+          Deploy of {{ app_version }} failed health check on
+          {{ inventory_hostname }} and was rolled back to
+          {{ app_previous_release.stdout | default('no previous release — this was the first deploy') }}.
+
+  always:
+    - name: Re-enable this host on the load balancer regardless of outcome
+      community.general.haproxy:
+        state: enabled
+        host: "{{ inventory_hostname }}"
+        socket: /run/haproxy.sock
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['role_lb'] }}"
