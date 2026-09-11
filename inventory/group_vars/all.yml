@@ -1,2 +1,4 @@
 ---
 nginx_port: 9090
+db_user: app_service
+db_password: "{{ vault_db_password }}"

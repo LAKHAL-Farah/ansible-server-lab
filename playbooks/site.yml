@@ -16,3 +16,9 @@
   become: true
   roles:
     - haproxy
+
+- name: Configure the db tier
+  hosts: role_db
+  become: true
+  roles:
+    - db_stub

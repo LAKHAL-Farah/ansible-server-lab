@@ -1,0 +1,8 @@
+---
+- name: Deploy application database credentials file
+  ansible.builtin.template:
+    src: db-credentials.conf.j2
+    dest: /etc/app-db-credentials.conf
+    owner: root
+    group: root
+    mode: "0600"
