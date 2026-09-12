@@ -1,0 +1,36 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Check the "last configured" marker file exists
+      ansible.builtin.stat:
+        path: /etc/last_configured_by_ansible.txt
+      register: common_marker_file
+
+    - name: Assert marker file was deployed
+      ansible.builtin.assert:
+        that: common_marker_file.stat.exists
+        fail_msg: "common role did not deploy the last_configured marker file"
+
+    - name: Check the managed user exists
+      ansible.builtin.command: id deploy
+      register: common_user_check
+      changed_when: false
+      failed_when: false
+
+    - name: Assert managed user exists
+      ansible.builtin.assert:
+        that: common_user_check.rc == 0
+        fail_msg: "managed user 'deploy' was not created"
+
+    - name: Check cron is running
+      ansible.builtin.command: pgrep cron
+      register: common_cron_running
+      changed_when: false
+      failed_when: false
+
+    - name: Assert cron is running
+      ansible.builtin.assert:
+        that: common_cron_running.rc == 0
+        fail_msg: "cron is not running after applying the common role"

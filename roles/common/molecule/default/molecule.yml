@@ -1,0 +1,23 @@
+---
+driver:
+  name: docker
+
+platforms:
+  - name: common-test-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    command: /sbin/init
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      remote_tmp: /tmp/.ansible/tmp
+      roles_path: /mnt/c/Users/Donutello/Desktop/projects/ansible-server-lab/roles
+
+verifier:
+  name: ansible

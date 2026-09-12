@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    # The common role's marker-file template reads docker_labels['lab.role'],
+    # which normally comes from our project's dynamic inventory plugin.
+    # Molecule doesn't use that inventory, so we supply a stand-in here.
+    docker_labels:
+      lab.role: molecule-test
+  tasks:
+    - name: Apply the common role
+      ansible.builtin.include_role:
+        name: common
