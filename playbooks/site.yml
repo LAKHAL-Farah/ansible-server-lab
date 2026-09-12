@@ -3,22 +3,26 @@
   hosts: all
   become: true
   roles:
-    - common
+    - role: common
+      tags: baseline
 
 - name: Configure the web tier
   hosts: role_web
   become: true
   roles:
-    - nginx
+    - role: nginx
+      tags: web
 
 - name: Configure the load balancer
   hosts: role_lb
   become: true
   roles:
-    - haproxy
+    - role: haproxy
+      tags: lb
 
 - name: Configure the db tier
   hosts: role_db
   become: true
   roles:
-    - db_stub
+    - role: db_stub
+      tags: db

@@ -1,0 +1,44 @@
+---
+- name: Fleet maintenance tasks
+  hosts: role_web
+  become: true
+  tasks:
+    # 'always' runs on every invocation of this playbook regardless of
+    # which --tags you pass, unless you explicitly --skip-tags always.
+    - name: Report current disk usage under the releases directory
+      ansible.builtin.command: "du -sh {{ app_deploy_release_dir }}"
+      register: releases_usage
+      changed_when: false
+      failed_when: false
+      tags:
+        - always
+        - diagnostics
+
+    - name: Print current disk usage
+      ansible.builtin.debug:
+        var: releases_usage.stdout
+      tags:
+        - always
+        - diagnostics
+
+    # 'never' is the opposite: this task is inert by default, no matter
+    # how you run this playbook, unless you explicitly ask for it by name
+    # or by tag.
+
+    
+    - name: DESTRUCTIVE — wipe all release directories
+      ansible.builtin.file:
+        path: "{{ app_deploy_release_dir }}"
+        state: absent
+      tags:
+        - cleanup
+        - never
+
+    - name: Recreate an empty releases directory after wiping
+      ansible.builtin.file:
+        path: "{{ app_deploy_release_dir }}"
+        state: directory
+        mode: "0755"
+      tags:
+        - cleanup
+        - never

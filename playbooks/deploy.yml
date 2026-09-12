@@ -20,4 +20,5 @@
       loop: "{{ groups['role_lb'] }}"
 
   roles:
-    - app_deploy
+    - role: app_deploy
+      tags: deploy
