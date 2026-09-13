@@ -25,7 +25,7 @@
     # how you run this playbook, unless you explicitly ask for it by name
     # or by tag.
 
-    
+
     - name: DESTRUCTIVE — wipe all release directories
       ansible.builtin.file:
         path: "{{ app_deploy_release_dir }}"

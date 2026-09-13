@@ -1,7 +1,7 @@
 ---
 - name: Capture the currently-live release, for rollback if this deploy fails
   ansible.builtin.command: "readlink -f {{ app_deploy_current_link }}"
-  register: app_previous_release
+  register: app_deploy_previous_release
   changed_when: false
   failed_when: false   # non-zero here just means "no release deployed yet" — that's fine
 
@@ -38,19 +38,19 @@
         url: "http://localhost:{{ nginx_port }}/"
         status_code: 200
         return_content: true
-      register: app_health
-      until: app_version in app_health.content
+      register: app_deploy_health
+      until: app_version in app_deploy_health.content
       retries: 5
       delay: 2
 
   rescue:
     - name: Roll back 'current' to the previous release
       ansible.builtin.file:
-        src: "{{ app_previous_release.stdout }}"
+        src: "{{ app_deploy_previous_release.stdout }}"
         dest: "{{ app_deploy_current_link }}"
         state: link
         force: true
-      when: app_previous_release.rc == 0
+      when: app_deploy_previous_release.rc == 0
 
     - name: Re-publish the previous release's content to the web root
       ansible.builtin.copy:
@@ -58,14 +58,14 @@
         dest: "{{ app_deploy_web_root }}/index.html"
         remote_src: true
         mode: "0644"
-      when: app_previous_release.rc == 0
+      when: app_deploy_previous_release.rc == 0
 
     - name: Fail loudly now that rollback is complete
       ansible.builtin.fail:
         msg: >-
           Deploy of {{ app_version }} failed health check on
           {{ inventory_hostname }} and was rolled back to
-          {{ app_previous_release.stdout | default('no previous release — this was the first deploy') }}.
+          {{ app_deploy_previous_release.stdout | default('no previous release — this was the first deploy') }}.
 
   always:
     - name: Re-enable this host on the load balancer regardless of outcome
