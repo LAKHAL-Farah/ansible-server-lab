@@ -12,9 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     iproute2 \
     ; \
-    ln -sf /usr/bin/python3 /usr/bin/python \
-    ; \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    ln -sf /usr/bin/python3 /usr/bin/python
 
-# keep the container alive so ansible has something to execute into 
+RUN apt-get install -y --no-install-recommends cron && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# keep the container alive so ansible has something to execute into
 CMD [ "tail", "-f", "/dev/null" ]
