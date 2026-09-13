@@ -11,10 +11,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-apt \
     sudo \
     iproute2 \
+    cron \
+    curl \
+    vim \
     ; \
     ln -sf /usr/bin/python3 /usr/bin/python
 
-RUN apt-get install -y --no-install-recommends cron && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # keep the container alive so ansible has something to execute into
 CMD [ "tail", "-f", "/dev/null" ]
