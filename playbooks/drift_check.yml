@@ -1,0 +1,35 @@
+---
+# This playbook is meant to be run ON A SCHEDULE, always with --check, and
+# NEVER applied for real. It exists to answer one question: "has anything
+# drifted from desired state since the last real run?" — without touching
+# anything.
+#
+# Usage:  ansible-playbook -i inventory/docker.yml playbooks/drift_check.yml --check --diff
+#
+- name: Apply baseline configuration to every node
+  hosts: all
+  become: true
+  roles:
+    - role: common
+      tags: baseline
+
+- name: Configure the web tier
+  hosts: role_web
+  become: true
+  roles:
+    - role: nginx
+      tags: web
+
+- name: Configure the load balancer
+  hosts: role_lb
+  become: true
+  roles:
+    - role: haproxy
+      tags: lb
+
+- name: Configure the db tier
+  hosts: role_db
+  become: true
+  roles:
+    - role: db_stub
+      tags: db
