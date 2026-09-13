@@ -17,7 +17,7 @@ provisioner:
   config_options:
     defaults:
       remote_tmp: /tmp/.ansible/tmp
-      roles_path: /mnt/c/Users/Donutello/Desktop/projects/ansible-server-lab/roles
+      roles_path: ../../
 
 verifier:
   name: ansible
