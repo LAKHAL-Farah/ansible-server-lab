@@ -17,7 +17,7 @@ provisioner:
   config_options:
     defaults:
       remote_tmp: /tmp/.ansible/tmp
-      roles_path: ../../
+      roles_path: ../../../
 
 verifier:
   name: ansible
