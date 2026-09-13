@@ -9,6 +9,7 @@
   register: nginx_check
   changed_when: false
   failed_when: false
+  check_mode: false
 
 - name: Remove the default nginx site
   ansible.builtin.file:

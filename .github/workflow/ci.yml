@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  ANSIBLE_CONFIG: ${{ github.workspace }}/ansible.cfg
+
+jobs:
+  lint-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible and testing tools
+        run: |
+          pip install ansible-core ansible-lint "molecule[docker]" molecule-plugins[docker]
+
+      - name: Install pinned collections
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Lint the whole project
+        run: ansible-lint .
+
+      - name: Syntax-check every playbook
+        run: |
+          for pb in playbooks/*.yml; do
+            echo "::group::syntax-check $pb"
+            ansible-playbook "$pb" --syntax-check
+            echo "::endgroup::"
+          done
+
+      - name: Bring up the lab fleet
+        run: docker compose up -d --build
+
+      - name: Wait for the fleet to respond
+        run: |
+          for i in $(seq 1 10); do
+            if ansible all -i inventory/docker.yml -m ping; then
+              exit 0
+            fi
+            echo "Fleet not ready yet, waiting..."
+            sleep 3
+          done
+          echo "Fleet never became reachable"
+          exit 1
+
+      - name: Create a throwaway vault password for CI
+        run: openssl rand -base64 24 > .vault_pass.txt
+
+      - name: Dry-run the whole fleet configuration
+        run: |
+          ansible-playbook -i inventory/docker.yml playbooks/site.yml \
+            --check --diff --skip-tags db
+
+      - name: Run Molecule tests for the common role
+        working-directory: roles/common
+        run: molecule test
+
+  apply-and-verify-idempotency:
+    needs: lint-and-check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: pip install ansible-core
+
+      - name: Install pinned collections
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Bring up the lab fleet
+        run: docker compose up -d --build
+
+      - name: Wait for the fleet to respond
+        run: |
+          for i in $(seq 1 10); do
+            if ansible all -i inventory/docker.yml -m ping; then
+              exit 0
+            fi
+            sleep 3
+          done
+          exit 1
+
+      - name: Write the real vault password from secrets
+        run: echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > .vault_pass.txt
+
+      - name: Apply the full site playbook
+        run: |
+          ansible-playbook -i inventory/docker.yml playbooks/site.yml \
+            --vault-password-file .vault_pass.txt
+
+      - name: Re-run and prove idempotency (must show changed=0 everywhere)
+        run: |
+          OUTPUT=$(ansible-playbook -i inventory/docker.yml playbooks/site.yml \
+            --vault-password-file .vault_pass.txt)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -E "changed=[1-9]"; then
+            echo "::error::Second run reported changes — a task isn't properly idempotent"
+            exit 1
+          fi
+
+      - name: Clean up the vault password file
+        if: always()
+        run: rm -f .vault_pass.txt
