@@ -2,5 +2,5 @@ This host was last configured by Ansible
 
 Hostname: {{ inventory_hostname }}
 Role: {{ docker_labels['lab.role'] | default('unknown') }}
-Configured at: {{ ansible_date_time.iso8601 }}
+Configured at: {{ ansible_facts["date_time"]["iso8601"] }}
 Ansible version: {{ ansible_version.full }}

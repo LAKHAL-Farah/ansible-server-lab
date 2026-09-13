@@ -38,6 +38,7 @@
     src: /etc/nginx/sites-available/app.conf
     dest: /etc/nginx/sites-enabled/app.conf
     state: link
+    force: true
   notify: Reload nginx
 
 - name: Start nginx if it isn't already running
