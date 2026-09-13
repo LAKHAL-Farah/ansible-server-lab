@@ -31,6 +31,12 @@
     shell: /bin/bash
     create_home: true
     state: present
+
+- name: Check whether the configuration marker already exists
+  ansible.builtin.stat:
+    path: /etc/last_configured_by_ansible.txt
+  register: common_marker_file
+
 - name: Deploy the "last configured by Ansible" marker file
   ansible.builtin.template:
     src: last_configured.txt.j2
@@ -38,3 +44,4 @@
     owner: root
     group: root
     mode: "0644"
+  when: not common_marker_file.stat.exists
