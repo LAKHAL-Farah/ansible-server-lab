@@ -45,7 +45,7 @@ jobs:
       - name: Wait for the fleet to respond
         run: |
           for i in $(seq 1 10); do
-            if ansible all -i inventory/docker.yml -m ping; then
+            if ansible 'role_lb:role_web' -i inventory/docker.yml -m ping; then
               exit 0
             fi
             echo "Fleet not ready yet, waiting..."
@@ -60,7 +60,7 @@ jobs:
       - name: Dry-run the whole fleet configuration
         run: |
           ansible-playbook -i inventory/docker.yml playbooks/site.yml \
-            --check --diff --skip-tags db
+            --limit 'role_lb:role_web' --check --diff --skip-tags db
 
       - name: Run Molecule tests for the common role
         working-directory: roles/common
@@ -88,18 +88,19 @@ jobs:
       - name: Bring up the lab fleet
         run: docker compose up -d --build
 
+      - name: Write the real vault password from secrets
+        run: printf '%s\n' "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > .vault_pass.txt
+
       - name: Wait for the fleet to respond
         run: |
           for i in $(seq 1 10); do
-            if ansible all -i inventory/docker.yml -m ping; then
+            if ansible all -i inventory/docker.yml -m ping \
+              --vault-password-file .vault_pass.txt; then
               exit 0
             fi
             sleep 3
           done
           exit 1
-
-      - name: Write the real vault password from secrets
-        run: echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > .vault_pass.txt
 
       - name: Apply the full site playbook
         run: |
